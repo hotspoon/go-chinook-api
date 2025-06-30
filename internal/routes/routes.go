@@ -18,6 +18,9 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 		{
 			artists.GET("", artistHandler.GetAll)
 			artists.GET("/:id", artistHandler.GetOne)
+			artists.POST("", artistHandler.Create)
+			artists.PUT(":id", artistHandler.Update)
+			artists.DELETE(":id", artistHandler.Delete)
 		}
 	}
 }
