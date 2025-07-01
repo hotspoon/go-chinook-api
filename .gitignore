@@ -22,4 +22,6 @@
 .DS_Store
 Thumbs.db
 
+air.log
+app.log
 .env

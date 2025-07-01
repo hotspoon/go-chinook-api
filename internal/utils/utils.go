@@ -27,8 +27,16 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		var tokenString string
-		fmt.Sscanf(authHeader, "Bearer %s", &tokenString)
+
+		// Accept both "Bearer <token>" and "<token>"
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		} else {
+			tokenString = authHeader
+		}
+
 		if tokenString == "" {
+			c.Error(fmt.Errorf("missing token"))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
 			return
 		}
@@ -36,10 +44,10 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
-
 			return []byte(getJWTSecret()), nil
 		})
 		if err != nil || !token.Valid {
+			c.Error(fmt.Errorf("invalid token"))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}

@@ -21,6 +21,10 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	r.POST("/login", authHandler.Login)
 	r.POST("/signup", authHandler.Signup)
 
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	api := r.Group("/api", utils.AuthMiddlewareJWT())
 	{
 		artists := api.Group("/artists")
@@ -43,7 +47,7 @@ func notFoundHandler(c *gin.Context) {
 func internalServerErrorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-		if len(c.Errors) > 0 {
+		if len(c.Errors) > 0 && !c.Writer.Written() {
 			c.JSON(500, gin.H{
 				"error":   "internal server error",
 				"details": c.Errors.Last().Error(),

@@ -8,9 +8,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func SetupDB() *sql.DB {
-	dbPath := "chinook.db"
+func SetupDB(dbPath string) *sql.DB {
 	db, err := sql.Open("sqlite", dbPath)
+
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
