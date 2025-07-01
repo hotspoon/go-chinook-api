@@ -5,6 +5,7 @@ import (
 
 	"chinook-api/internal/models"
 	"chinook-api/internal/repositories"
+	"chinook-api/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +25,7 @@ func (h *ArtistHandler) GetAll(c *gin.Context) {
 
 func (h *ArtistHandler) GetOne(c *gin.Context) {
 	id := c.Param("id")
-	artist, err := h.Repo.GetArtistByID(ParseInt(id))
+	artist, err := h.Repo.GetArtistByID(utils.ParseInt(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
