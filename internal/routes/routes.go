@@ -12,7 +12,8 @@ import (
 func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	artistRepo := &repositories.ArtistRepository{DB: db}
 	artistHandler := &handlers.ArtistHandler{Repo: artistRepo}
-	authHandler := &handlers.AuthHandler{}
+	userRepo := &repositories.UserRepository{DB: db}
+	authHandler := &handlers.AuthHandler{UserRepo: userRepo}
 
 	r.NoRoute(notFoundHandler)
 	r.Use(internalServerErrorMiddleware())

@@ -51,7 +51,7 @@ func (h *ArtistHandler) Create(c *gin.Context) {
 }
 
 func (h *ArtistHandler) Update(c *gin.Context) {
-	id := ParseInt(c.Param("id"))
+	id := utils.ParseInt(c.Param("id"))
 	var artist models.Artist
 	if err := c.ShouldBindJSON(&artist); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -66,10 +66,10 @@ func (h *ArtistHandler) Update(c *gin.Context) {
 }
 
 func (h *ArtistHandler) Delete(c *gin.Context) {
-	id := ParseInt(c.Param("id"))
+	id := utils.ParseInt(c.Param("id"))
 	if err := h.Repo.DeleteArtist(id); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
