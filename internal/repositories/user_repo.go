@@ -4,6 +4,8 @@ import (
 	"chinook-api/internal/models"
 	"database/sql"
 	"fmt"
+
+	"github.com/rs/zerolog/log"
 )
 
 type UserRepository struct {
@@ -16,6 +18,7 @@ func (r *UserRepository) CreateUser(user models.User) (int64, error) {
 		user.Username, user.Email, user.Password,
 	)
 	if err != nil {
+		log.Error().Err(err).Msg("Error creating user")
 		return 0, fmt.Errorf("error creating user: %w", err)
 	}
 	return result.LastInsertId()
@@ -28,6 +31,7 @@ func (r *UserRepository) GetUserByUsername(username string) (models.User, error)
 		username,
 	).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
 	if err != nil {
+		log.Error().Err(err).Msg("User not found")
 		return user, fmt.Errorf("user not found")
 	}
 	return user, nil

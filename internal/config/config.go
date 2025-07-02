@@ -1,8 +1,9 @@
 package config
 
 import (
-	"log"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type AppConfig struct {
@@ -18,7 +19,7 @@ func LoadConfig() *AppConfig {
 		DBPath:    os.Getenv("DB_PATH"),
 	}
 	if cfg.JWTSecret == "" {
-		log.Fatal("JWT_SECRET is required")
+		log.Fatal().Msg("JWT_SECRET is required")
 	}
 	if cfg.Port == "" {
 		cfg.Port = "8080"

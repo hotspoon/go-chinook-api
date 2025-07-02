@@ -115,6 +115,12 @@ func (h *ArtistHandler) Update(c *gin.Context) {
 // @Router /api/artists/{id} [delete]
 func (h *ArtistHandler) Delete(c *gin.Context) {
 	id := utils.ParseInt(c.Param("id"))
+	// Check if artist exists before deleting
+	_, err := h.Repo.GetArtistByID(id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "artist not found"})
+		return
+	}
 	if err := h.Repo.DeleteArtist(id); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
