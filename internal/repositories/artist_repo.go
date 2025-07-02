@@ -14,7 +14,6 @@ type ArtistRepository struct {
 }
 
 func (r *ArtistRepository) GetAllArtists() ([]models.Artist, error) {
-	log.Debug().Msg("Fetching all artists")
 	rows, err := r.DB.Query("SELECT ArtistId, Name FROM Artist")
 	if err != nil {
 		log.Error().Err(err).Msg("Error fetching artists")
@@ -31,7 +30,6 @@ func (r *ArtistRepository) GetAllArtists() ([]models.Artist, error) {
 		}
 		artists = append(artists, artist)
 	}
-	log.Debug().Int("count", len(artists)).Msg("Fetched artists")
 	return artists, nil
 }
 

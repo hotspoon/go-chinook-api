@@ -44,6 +44,7 @@ func main() {
 	defer logFile.Close()
 
 	r := gin.New()
+	r.Use(logging.RequestContextMiddleware())
 	r.Use(cors.Default())
 	r.Use(logging.ZerologMiddleware(), gin.Recovery())
 	routes.SetupRoutes(r, db)
