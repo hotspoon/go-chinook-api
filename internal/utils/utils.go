@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+
+	"crypto/rand"
+	"encoding/base64"
 )
 
 // GenerateJWT generates a JWT token for a username
@@ -72,4 +75,12 @@ func getJWTSecret() string {
 		panic("JWT_SECRET environment variable not set")
 	}
 	return secret
+}
+
+func GenerateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }

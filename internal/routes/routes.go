@@ -5,35 +5,70 @@ import (
 	"chinook-api/internal/repositories"
 	"chinook-api/internal/utils"
 	"database/sql"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(r *gin.Engine, db *sql.DB) {
+	// auth
+	userRepo := &repositories.UserRepository{DB: db}
+	refreshTokenRepo := &repositories.RefreshTokenRepository{DB: db}
+	authHandler := &handlers.AuthHandler{
+		UserRepo:         userRepo,
+		RefreshTokenRepo: refreshTokenRepo,
+	}
+	// artists
 	artistRepo := &repositories.ArtistRepository{DB: db}
 	artistHandler := &handlers.ArtistHandler{Repo: artistRepo}
-	userRepo := &repositories.UserRepository{DB: db}
-	authHandler := &handlers.AuthHandler{UserRepo: userRepo}
+
+	// albums
+	albumRepo := &repositories.AlbumRepository{DB: db}
+	albumHandler := &handlers.AlbumHandler{Repo: albumRepo}
 
 	r.NoRoute(notFoundHandler)
 	r.Use(internalServerErrorMiddleware())
-
-	r.POST("/login", authHandler.Login)
-	r.POST("/signup", authHandler.Signup)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	api := r.Group("/api", utils.AuthMiddlewareJWT())
+	version := os.Getenv("API_VERSION")
+	api := r.Group("/api/" + version)
+
+	// Auth routes (no JWT required for login/signup/refresh)
+	auth := api.Group("/auth")
 	{
-		artists := api.Group("/artists")
+		auth.POST("/login", authHandler.Login)
+		auth.POST("/signup", authHandler.Signup)
+		auth.POST("/refresh", authHandler.Refresh)
+	}
+
+	// Protected routes
+	var protected *gin.RouterGroup
+	if os.Getenv("GO_ENV") == "production" {
+		protected = api.Group("", utils.AuthMiddlewareJWT())
+	} else {
+		protected = api.Group("")
+	}
+	{
+		protected.GET("/auth/me", authHandler.Me)
+		artists := protected.Group("/artists")
 		{
 			artists.GET("", artistHandler.GetAll)
 			artists.GET("/:id", artistHandler.GetOne)
 			artists.POST("", artistHandler.Create)
 			artists.PUT("/:id", artistHandler.Update)
 			artists.DELETE("/:id", artistHandler.Delete)
+		}
+
+		albums := protected.Group("/albums")
+		{
+			albums.GET("", albumHandler.GetAll)
+			albums.GET("/:id", albumHandler.GetOne)
+			albums.POST("", albumHandler.Create)
+			albums.PUT("/:id", albumHandler.Update)
+			albums.DELETE("/:id", albumHandler.Delete)
 		}
 	}
 }

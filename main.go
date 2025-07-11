@@ -45,7 +45,14 @@ func main() {
 
 	r := gin.New()
 	r.Use(logging.RequestContextMiddleware())
-	r.Use(cors.Default())
+	// r.Use(cors.Default())
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{os.Getenv("FRONTEND_WEB_URL")},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 	r.Use(logging.ZerologMiddleware(), gin.Recovery())
 	routes.SetupRoutes(r, db)
 

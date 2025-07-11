@@ -1,4 +1,13 @@
 definitions:
+  models.Album:
+    properties:
+      artist_id:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
   models.Artist:
     properties:
       id:
@@ -17,6 +26,22 @@ definitions:
     required:
     - password
     - username
+    type: object
+  models.Me:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  models.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
     type: object
   models.SignupRequest:
     properties:
@@ -39,7 +64,51 @@ info:
   title: Chinook API
   version: "1.0"
 paths:
-  /api/artists:
+  /api/v1/albums:
+    get:
+      description: Returns a list of all albums
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Album'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all albums
+      tags:
+      - albums
+  /api/v1/albums/{id}:
+    get:
+      description: Returns a single album by ID
+      parameters:
+      - description: Album ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Album'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get album by ID
+      tags:
+      - albums
+  /api/v1/artists:
     get:
       description: Returns a list of all artists
       produces:
@@ -91,7 +160,7 @@ paths:
       summary: Create a new artist
       tags:
       - artists
-  /api/artists/{id}:
+  /api/v1/artists/{id}:
     delete:
       description: Deletes an artist by ID
       parameters:
@@ -186,7 +255,7 @@ paths:
       summary: Update an artist
       tags:
       - artists
-  /login:
+  /api/v1/auth/login:
     post:
       consumes:
       - application/json
@@ -228,7 +297,62 @@ paths:
       summary: User login
       tags:
       - auth
-  /signup:
+  /api/v1/auth/me:
+    get:
+      description: Returns the authenticated user's information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Me'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Returns a new JWT token given a valid refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/signup:
     post:
       consumes:
       - application/json

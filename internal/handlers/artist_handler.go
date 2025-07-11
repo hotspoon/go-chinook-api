@@ -20,7 +20,7 @@ type ArtistHandler struct {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {array} models.Artist
-// @Router /api/artists [get]
+// @Router /api/v1/artists [get]
 func (h *ArtistHandler) GetAll(c *gin.Context) {
 	artists, err := h.Repo.GetAllArtists()
 	if err != nil {
@@ -38,7 +38,7 @@ func (h *ArtistHandler) GetAll(c *gin.Context) {
 // @Param id path int true "Artist ID"
 // @Success 200 {object} models.Artist
 // @Failure 404 {object} map[string]string
-// @Router /api/artists/{id} [get]
+// @Router /api/v1/artists/{id} [get]
 func (h *ArtistHandler) GetOne(c *gin.Context) {
 	id := c.Param("id")
 	artist, err := h.Repo.GetArtistByID(utils.ParseInt(id))
@@ -59,7 +59,7 @@ func (h *ArtistHandler) GetOne(c *gin.Context) {
 // @Success 201 {object} models.Artist
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/artists [post]
+// @Router /api/v1/artists [post]
 func (h *ArtistHandler) Create(c *gin.Context) {
 	var artist models.Artist
 
@@ -88,7 +88,7 @@ func (h *ArtistHandler) Create(c *gin.Context) {
 // @Success 200 {object} models.Artist
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/artists/{id} [put]
+// @Router /api/v1/artists/{id} [put]
 func (h *ArtistHandler) Update(c *gin.Context) {
 	id := utils.ParseInt(c.Param("id"))
 	var artist models.Artist
@@ -112,7 +112,7 @@ func (h *ArtistHandler) Update(c *gin.Context) {
 // @Param id path int true "Artist ID"
 // @Success 200 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /api/artists/{id} [delete]
+// @Router /api/v1/artists/{id} [delete]
 func (h *ArtistHandler) Delete(c *gin.Context) {
 	id := utils.ParseInt(c.Param("id"))
 	// Check if artist exists before deleting

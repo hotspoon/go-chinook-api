@@ -10,6 +10,8 @@ import (
 
 	"strings"
 
+	"io"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -23,8 +25,15 @@ func InitLogger(logPath string) (*os.File, error) {
 		return nil, err
 	}
 	zerolog.TimeFieldFormat = time.RFC3339
-	Logger = zerolog.New(logFile).With().Timestamp().Logger()
+
+	// ConsoleWriter for human-friendly logs in terminal
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+
+	// MultiWriter: console (pretty) + file (JSON)
+	multi := io.MultiWriter(consoleWriter, logFile)
+	Logger = zerolog.New(multi).With().Timestamp().Logger()
 	log.Logger = Logger // set global logger
+
 	return logFile, nil
 }
 
