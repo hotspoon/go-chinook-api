@@ -1,10 +1,11 @@
 package models
 
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password,omitempty"`
+	ID            int    `json:"id"`
+	Username      string `json:"username"`
+	Email         string `json:"email"`
+	Password      string `json:"password,omitempty"`
+	Authenticated bool   `json:"authenticated,omitempty"`
 }
 
 type LoginRequest struct {

@@ -41,7 +41,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.UserRepo.GetUserByUsername(req.Username)
+	user, err := h.UserRepo.GetUserByUsername(c.Request.Context(), req.Username)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username"})
 		return
@@ -64,7 +64,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 	expiresAt := time.Now().Add(7 * 24 * time.Hour) // 7 days
-	if err := h.RefreshTokenRepo.Save(refreshToken, user.Username, expiresAt); err != nil {
+	if err := h.RefreshTokenRepo.Save(c.Request.Context(), refreshToken, user.Username, expiresAt); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save refresh token"})
 		return
 	}
@@ -109,7 +109,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		Password: hashedPassword,
 	}
 
-	id, err := h.UserRepo.CreateUser(user)
+	id, err := h.UserRepo.CreateUser(c.Request.Context(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -140,13 +140,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rt, err := h.RefreshTokenRepo.Get(req.RefreshToken)
+	rt, err := h.RefreshTokenRepo.Get(c.Request.Context(), req.RefreshToken)
 	if err != nil || rt.ExpiresAt.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired refresh token"})
 		return
 	}
 	// Optionally, delete the old refresh token to rotate
-	_ = h.RefreshTokenRepo.Delete(req.RefreshToken)
+	_ = h.RefreshTokenRepo.Delete(c.Request.Context(), req.RefreshToken)
 
 	token, err := utils.GenerateJWT(rt.Username)
 	if err != nil {
@@ -159,7 +159,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
-	_ = h.RefreshTokenRepo.Save(newRefreshToken, rt.Username, expiresAt)
+	_ = h.RefreshTokenRepo.Save(c.Request.Context(), newRefreshToken, rt.Username, expiresAt)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token":         token,
@@ -180,11 +180,38 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	user, err := h.UserRepo.GetUserByUsername(username.(string))
+	user, err := h.UserRepo.GetUserByUsername(c.Request.Context(), username.(string))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 		return
 	}
+	user.Authenticated = true
 	user.Password = ""
 	c.JSON(http.StatusOK, user)
+}
+
+// @Summary User logout
+// @Description Logs out the user by deleting the refresh token
+// @Tags auth
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	_, exists := c.Get("username")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing token"})
+		return
+	}
+	tokenString := authHeader[len("Bearer "):]
+	if err := h.RefreshTokenRepo.Delete(c.Request.Context(), tokenString); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete refresh token"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "successfully logged out"})
 }

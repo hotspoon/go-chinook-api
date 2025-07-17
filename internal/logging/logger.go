@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -9,8 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"strings"
-
-	"io"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -26,12 +25,13 @@ func InitLogger(logPath string) (*os.File, error) {
 	}
 	zerolog.TimeFieldFormat = time.RFC3339
 
-	// ConsoleWriter for human-friendly logs in terminal
+	// ConsoleWriter for human-readable logs in terminal
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 
-	// MultiWriter: console (pretty) + file (JSON)
-	multi := io.MultiWriter(consoleWriter, logFile)
-	Logger = zerolog.New(multi).With().Timestamp().Logger()
+	// MultiWriter: JSON to file, human-readable to terminal
+	multiWriter := io.MultiWriter(logFile, consoleWriter)
+
+	Logger = zerolog.New(multiWriter).With().Timestamp().Logger()
 	log.Logger = Logger // set global logger
 
 	return logFile, nil
@@ -83,16 +83,31 @@ func RequestContextMiddleware() gin.HandlerFunc {
 		} else {
 			tokenString = authHeader
 		}
-		if tokenString != "" {
-			token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-			if err == nil {
-				if claims, ok := token.Claims.(jwt.MapClaims); ok {
-					if username, ok := claims["username"].(string); ok {
-						c.Set("username", username)
-					}
-				}
-			}
+		if tokenString == "" {
+			c.Next()
+			return
 		}
+
+		token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.Next()
+			return
+		}
+
+		username, ok := claims["username"].(string)
+		if !ok {
+			c.Next()
+			return
+		}
+
+		c.Set("username", username)
+
 		c.Next()
 	}
 }

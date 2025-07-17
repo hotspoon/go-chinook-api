@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 
 	"crypto/rand"
@@ -50,6 +51,7 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 			return []byte(getJWTSecret()), nil
 		})
 		if err != nil || !token.Valid {
+			log.Error().Err(err).Msg("Invalid token")
 			c.Error(fmt.Errorf("invalid token"))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return

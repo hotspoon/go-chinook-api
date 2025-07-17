@@ -26,6 +26,14 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	albumRepo := &repositories.AlbumRepository{DB: db}
 	albumHandler := &handlers.AlbumHandler{Repo: albumRepo}
 
+	// employees
+	employeeRepo := &repositories.EmployeeRepository{DB: db}
+	employeeHandler := &handlers.EmployeeHandler{Repo: employeeRepo}
+
+	// tracks
+	trackRepo := &repositories.TrackRepository{DB: db}
+	trackHandler := &handlers.TrackHandler{Repo: trackRepo}
+
 	r.NoRoute(notFoundHandler)
 	r.Use(internalServerErrorMiddleware())
 
@@ -53,6 +61,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	}
 	{
 		protected.GET("/auth/me", authHandler.Me)
+		protected.POST("/auth/logout", authHandler.Logout)
 		artists := protected.Group("/artists")
 		{
 			artists.GET("", artistHandler.GetAll)
@@ -69,6 +78,18 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			albums.POST("", albumHandler.Create)
 			albums.PUT("/:id", albumHandler.Update)
 			albums.DELETE("/:id", albumHandler.Delete)
+		}
+
+		employees := protected.Group("/employees")
+		{
+			employees.GET("", employeeHandler.GetAll)
+			employees.GET("/:id", employeeHandler.GetOne)
+		}
+
+		tracks := protected.Group("/tracks")
+		{
+			tracks.GET("", trackHandler.GetAll)
+			tracks.GET("/:id", trackHandler.GetOne)
 		}
 	}
 }

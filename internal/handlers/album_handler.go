@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"chinook-api/internal/models"
-	_ "chinook-api/internal/models"
 	"chinook-api/internal/repositories"
 	"chinook-api/internal/utils"
-	_ "chinook-api/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,7 +22,7 @@ type AlbumHandler struct {
 // @Success 200 {array} models.Album
 // @Router /api/v1/albums [get]
 func (h *AlbumHandler) GetAll(c *gin.Context) {
-	albums, err := h.Repo.GetAllAlbums()
+	albums, err := h.Repo.GetAllAlbums(c.Request.Context())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
@@ -43,7 +41,7 @@ func (h *AlbumHandler) GetAll(c *gin.Context) {
 // @Router /api/v1/albums/{id} [get]
 func (h *AlbumHandler) GetOne(c *gin.Context) {
 	id := c.Param("id")
-	album, err := h.Repo.GetAlbumByID(utils.ParseInt(id))
+	album, err := h.Repo.GetAlbumByID(c.Request.Context(), utils.ParseInt(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -58,7 +56,7 @@ func (h *AlbumHandler) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := h.Repo.CreateAlbum(album)
+	id, err := h.Repo.CreateAlbum(c.Request.Context(), album)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -77,7 +75,7 @@ func (h *AlbumHandler) Update(c *gin.Context) {
 		return
 	}
 	album.ID = id
-	if err := h.Repo.UpdateAlbum(album); err != nil {
+	if err := h.Repo.UpdateAlbum(c.Request.Context(), album); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -86,7 +84,7 @@ func (h *AlbumHandler) Update(c *gin.Context) {
 
 func (h *AlbumHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	err := h.Repo.DeleteAlbum(utils.ParseInt(id))
+	err := h.Repo.DeleteAlbum(c.Request.Context(), utils.ParseInt(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

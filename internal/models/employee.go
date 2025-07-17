@@ -1,10 +1,23 @@
 package models
 
+import (
+	"chinook-api/internal/utils"
+)
+
 type Employee struct {
-	ID        int    `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Title     string `json:"title"`
-	Email     string `json:"email"`
-	Password  string `json:"password,omitempty"`
+	EmployeeId int             `json:"employee_id"`
+	LastName   string          `json:"last_name"`
+	FirstName  string          `json:"first_name"`
+	Title      *string         `json:"title,omitempty"`
+	ReportsTo  *int            `json:"reports_to,omitempty"`
+	BirthDate  *utils.DateOnly `json:"BirthDate,omitempty"`
+	HireDate   *utils.DateOnly `json:"HireDate,omitempty"`
+	Address    *string         `json:"address,omitempty"`
+	City       *string         `json:"city,omitempty"`
+	State      *string         `json:"state,omitempty"`
+	Country    *string         `json:"country,omitempty"`
+	PostalCode *string         `json:"postal_code,omitempty"`
+	Phone      *string         `json:"phone,omitempty"`
+	Fax        *string         `json:"fax,omitempty"`
+	Email      *string         `json:"email,omitempty"`
 }

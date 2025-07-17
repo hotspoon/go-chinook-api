@@ -22,7 +22,7 @@ type ArtistHandler struct {
 // @Success 200 {array} models.Artist
 // @Router /api/v1/artists [get]
 func (h *ArtistHandler) GetAll(c *gin.Context) {
-	artists, err := h.Repo.GetAllArtists()
+	artists, err := h.Repo.GetAllArtists(c.Request.Context())
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -41,7 +41,7 @@ func (h *ArtistHandler) GetAll(c *gin.Context) {
 // @Router /api/v1/artists/{id} [get]
 func (h *ArtistHandler) GetOne(c *gin.Context) {
 	id := c.Param("id")
-	artist, err := h.Repo.GetArtistByID(utils.ParseInt(id))
+	artist, err := h.Repo.GetArtistByID(c.Request.Context(), utils.ParseInt(id))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -67,7 +67,7 @@ func (h *ArtistHandler) Create(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	id, err := h.Repo.CreateArtist(artist)
+	id, err := h.Repo.CreateArtist(c.Request.Context(), artist)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
@@ -97,7 +97,7 @@ func (h *ArtistHandler) Update(c *gin.Context) {
 		return
 	}
 	artist.ID = id
-	if err := h.Repo.UpdateArtist(artist); err != nil {
+	if err := h.Repo.UpdateArtist(c.Request.Context(), artist); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -116,12 +116,12 @@ func (h *ArtistHandler) Update(c *gin.Context) {
 func (h *ArtistHandler) Delete(c *gin.Context) {
 	id := utils.ParseInt(c.Param("id"))
 	// Check if artist exists before deleting
-	_, err := h.Repo.GetArtistByID(id)
+	_, err := h.Repo.GetArtistByID(c.Request.Context(), id)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "artist not found"})
 		return
 	}
-	if err := h.Repo.DeleteArtist(id); err != nil {
+	if err := h.Repo.DeleteArtist(c.Request.Context(), id); err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
