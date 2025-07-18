@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRoutes(r *gin.Engine, db *sql.DB) {
@@ -34,6 +36,10 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	trackRepo := &repositories.TrackRepository{DB: db}
 	trackHandler := &handlers.TrackHandler{Repo: trackRepo}
 
+	// genres
+	genreRepo := &repositories.GenreRepository{DB: db}
+	genreHandler := &handlers.GenreHandler{Repo: genreRepo}
+
 	r.NoRoute(notFoundHandler)
 	r.Use(internalServerErrorMiddleware())
 
@@ -43,6 +49,8 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 
 	version := os.Getenv("API_VERSION")
 	api := r.Group("/api/" + version)
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Auth routes (no JWT required for login/signup/refresh)
 	auth := api.Group("/auth")
@@ -90,6 +98,12 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 		{
 			tracks.GET("", trackHandler.GetAll)
 			tracks.GET("/:id", trackHandler.GetOne)
+		}
+
+		genres := protected.Group("/genres")
+		{
+			genres.GET("", genreHandler.GetAll)
+			genres.GET("/:id", genreHandler.GetOne)
 		}
 	}
 }

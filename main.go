@@ -23,8 +23,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -55,9 +53,6 @@ func main() {
 	}))
 	r.Use(logging.ZerologMiddleware(), gin.Recovery())
 	routes.SetupRoutes(r, db)
-
-	// Add Swagger docs route
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
