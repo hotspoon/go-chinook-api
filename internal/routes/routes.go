@@ -40,6 +40,26 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 	genreRepo := &repositories.GenreRepository{DB: db}
 	genreHandler := &handlers.GenreHandler{Repo: genreRepo}
 
+	// media types
+	mediaTypesRepo := &repositories.MediaTypeRepository{DB: db}
+	mediaTypeHandler := &handlers.MediaTypeHandler{Repo: mediaTypesRepo}
+
+	// playlists
+	playlistRepo := &repositories.PlaylistRepository{DB: db}
+	playlistHandler := &handlers.PlaylistHandler{Repo: playlistRepo}
+
+	// playlist tracks
+	playlistTrackRepo := &repositories.PlaylistTrackRepository{DB: db}
+	playlistTrackHandler := &handlers.PlaylistTrackHandler{Repo: playlistTrackRepo}
+
+	// customers
+	customerRepo := &repositories.CustomerRepository{DB: db}
+	customerHandler := &handlers.CustomerHandler{Repo: customerRepo}
+
+	// invoices
+	invoiceRepo := &repositories.InvoiceRepository{DB: db}
+	invoiceHandler := &handlers.InvoiceHandler{Repo: invoiceRepo}
+
 	r.NoRoute(notFoundHandler)
 	r.Use(internalServerErrorMiddleware())
 
@@ -105,6 +125,32 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			genres.GET("", genreHandler.GetAll)
 			genres.GET("/:id", genreHandler.GetOne)
 		}
+
+		mediaTypes := protected.Group("/media_types")
+		{
+			mediaTypes.GET("", mediaTypeHandler.GetAll)
+			mediaTypes.GET("/:id", mediaTypeHandler.GetOne)
+		}
+
+		playlists := protected.Group("/playlists")
+		{
+			playlists.GET("", playlistHandler.GetAll)
+			playlists.GET("/:id", playlistHandler.GetOne)
+			playlists.GET("/:id/tracks", playlistTrackHandler.GetPlaylistTrack)
+		}
+
+		customers := protected.Group("/customers")
+		{
+			customers.GET("", customerHandler.GetAll)
+			customers.GET("/:id", customerHandler.GetOne)
+		}
+
+		invoices := protected.Group("/invoices")
+		{
+			invoices.GET("", invoiceHandler.GetAll)
+			invoices.GET("/:id", invoiceHandler.GetOne)
+		}
+
 	}
 }
 
@@ -119,8 +165,7 @@ func internalServerErrorMiddleware() gin.HandlerFunc {
 		c.Next()
 		if len(c.Errors) > 0 && !c.Writer.Written() {
 			c.JSON(500, gin.H{
-				"error":   "internal server error",
-				"details": c.Errors.Last().Error(),
+				"error": "internal server error " + c.Errors.Last().Error(),
 			})
 		}
 	}
