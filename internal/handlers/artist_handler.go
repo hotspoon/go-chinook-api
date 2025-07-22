@@ -127,3 +127,30 @@ func (h *ArtistHandler) Delete(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }
+
+// @Summary Search artists by name
+// @Description Returns artists whose names match the search term
+// @Tags artists
+// @Produce json
+// @Security BearerAuth
+// @Param name query string true "Artist name to search for"
+// @Success 200 {array} models.Artist
+// @Failure 400 {object} models.ErrorResponse
+// @Router /api/v1/artists/search [get]
+func (h *ArtistHandler) SearchByName(c *gin.Context) {
+    name := c.Query("name")
+    if name == "" {
+        c.AbortWithStatusJSON(http.StatusBadRequest, models.ErrorResponse{Error: "name query parameter is required"})
+        return
+    }
+    artists, err := h.Repo.SearchArtistsByName(c.Request.Context(), name)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusInternalServerError, models.ErrorResponse{Error: err.Error()})
+        return
+    }
+    if len(artists) == 0 {
+        c.AbortWithStatusJSON(http.StatusNotFound, models.ErrorResponse{Error: "no artists found"})
+        return
+    }
+    c.JSON(http.StatusOK, artists)
+}

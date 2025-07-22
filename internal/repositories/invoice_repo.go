@@ -64,3 +64,32 @@ func (r *InvoiceRepository) GetInvoiceByID(ctx context.Context, id int) (models.
 	}
 	return invoice, nil
 }
+
+// GetInvoiceLinesByInvoiceID fetches all invoice lines for a given invoice ID
+func (r *InvoiceRepository) GetInvoiceLinesByInvoiceID(ctx context.Context, invoiceID int) ([]models.InvoiceLine, error) {
+    rows, err := r.DB.QueryContext(ctx, `
+        SELECT InvoiceLineId, InvoiceId, TrackId, UnitPrice, Quantity
+        FROM InvoiceLine
+        WHERE InvoiceId = ?
+    `, invoiceID)
+    if err != nil {
+        log.Error().Err(err).Msg("failed to query invoice lines")
+        return nil, fmt.Errorf("error fetching invoice lines: %w", err)
+    }
+    defer rows.Close()
+
+    var lines []models.InvoiceLine
+    for rows.Next() {
+        var line models.InvoiceLine
+        if err := rows.Scan(&line.InvoiceLineId, &line.InvoiceId, &line.TrackId, &line.UnitPrice, &line.Quantity); err != nil {
+            log.Error().Err(err).Msg("failed to scan invoice line")
+            return nil, fmt.Errorf("error scanning invoice line: %w", err)
+        }
+        lines = append(lines, line)
+    }
+    if err := rows.Err(); err != nil {
+        log.Error().Err(err).Msg("error iterating over invoice lines")
+        return nil, fmt.Errorf("error iterating over invoice lines: %w", err)
+    }
+    return lines, nil
+}

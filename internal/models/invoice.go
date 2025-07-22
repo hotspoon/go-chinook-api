@@ -13,3 +13,11 @@ type Invoice struct {
 	BillingPostalCode *string   `json:"billing_postal_code,omitempty"`
 	Total             float64   `json:"total"`
 }
+
+type InvoiceLine struct {
+    InvoiceLineId int     `json:"invoice_line_id"`
+    InvoiceId     int     `json:"invoice_id"`
+    TrackId       int     `json:"track_id"`
+    UnitPrice     float64 `json:"unit_price"`
+    Quantity      int     `json:"quantity"`
+}

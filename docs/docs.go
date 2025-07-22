@@ -169,6 +169,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/artists/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns artists whose names match the search term",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artists"
+                ],
+                "summary": "Search artists by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Artist name to search for",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Artist"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/artists/{id}": {
             "get": {
                 "security": [
@@ -825,6 +868,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/invoices/{id}/lines": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all invoice lines for a given invoice",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invoices"
+                ],
+                "summary": "Get invoice lines by invoice ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.InvoiceLine"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/media_types": {
             "get": {
                 "security": [
@@ -1031,6 +1117,20 @@ const docTemplate = `{
                     "tracks"
                 ],
                 "summary": "Get all tracks",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1246,6 +1346,26 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.InvoiceLine": {
+            "type": "object",
+            "properties": {
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "invoice_line_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "track_id": {
+                    "type": "integer"
+                },
+                "unit_price": {
                     "type": "number"
                 }
             }

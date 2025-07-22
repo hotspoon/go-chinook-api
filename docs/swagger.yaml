@@ -110,6 +110,19 @@ definitions:
       total:
         type: number
     type: object
+  models.InvoiceLine:
+    properties:
+      invoice_id:
+        type: integer
+      invoice_line_id:
+        type: integer
+      quantity:
+        type: integer
+      track_id:
+        type: integer
+      unit_price:
+        type: number
+    type: object
   models.LoginRequest:
     properties:
       password:
@@ -388,6 +401,33 @@ paths:
       security:
       - BearerAuth: []
       summary: Update an artist
+      tags:
+      - artists
+  /api/v1/artists/search:
+    get:
+      description: Returns artists whose names match the search term
+      parameters:
+      - description: Artist name to search for
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Artist'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search artists by name
       tags:
       - artists
   /api/v1/auth/login:
@@ -712,6 +752,33 @@ paths:
       summary: Get invoice by ID
       tags:
       - invoices
+  /api/v1/invoices/{id}/lines:
+    get:
+      description: Returns all invoice lines for a given invoice
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.InvoiceLine'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get invoice lines by invoice ID
+      tags:
+      - invoices
   /api/v1/media_types:
     get:
       description: Returns a list of all media types
@@ -834,6 +901,15 @@ paths:
   /api/v1/tracks:
     get:
       description: Returns a list of all tracks
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:

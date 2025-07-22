@@ -13,43 +13,44 @@ type TrackRepository struct {
 	DB *sql.DB
 }
 
-func (r *TrackRepository) GetAllTracks(ctx context.Context) ([]models.Track, error) {
-	rows, err := r.DB.QueryContext(ctx, `
-		SELECT
-			TrackId, Name, AlbumId, MediaTypeId, GenreId, Composer,
-			Milliseconds, Bytes, UnitPrice
-		FROM Track
-	`)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to query tracks")
-		return nil, fmt.Errorf("error fetching tracks: %w", err)
-	}
-	defer rows.Close()
+func (r *TrackRepository) GetTracksPaginated(ctx context.Context, limit, offset int) ([]models.Track, error) {
+    rows, err := r.DB.QueryContext(ctx, `
+        SELECT
+            TrackId, Name, AlbumId, MediaTypeId, GenreId, Composer,
+            Milliseconds, Bytes, UnitPrice
+        FROM Track
+        LIMIT ? OFFSET ?
+    `, limit, offset)
+    if err != nil {
+        log.Error().Err(err).Msg("failed to query tracks with pagination")
+        return nil, fmt.Errorf("error fetching tracks: %w", err)
+    }
+    defer rows.Close()
 
-	var tracks []models.Track
-	for rows.Next() {
-		var track models.Track
-		if err := rows.Scan(
-			&track.TrackId,
-			&track.Name,
-			&track.AlbumId,
-			&track.MediaTypeId,
-			&track.GenreId,
-			&track.Composer,
-			&track.Milliseconds,
-			&track.Bytes,
-			&track.UnitPrice,
-		); err != nil {
-			log.Error().Err(err).Msg("failed to scan track")
-			return nil, fmt.Errorf("error scanning track: %w", err)
-		}
-		tracks = append(tracks, track)
-	}
-	if err := rows.Err(); err != nil {
-		log.Error().Err(err).Msg("error iterating over tracks")
-		return nil, fmt.Errorf("error iterating over tracks: %w", err)
-	}
-	return tracks, nil
+    var tracks []models.Track
+    for rows.Next() {
+        var track models.Track
+        if err := rows.Scan(
+            &track.TrackId,
+            &track.Name,
+            &track.AlbumId,
+            &track.MediaTypeId,
+            &track.GenreId,
+            &track.Composer,
+            &track.Milliseconds,
+            &track.Bytes,
+            &track.UnitPrice,
+        ); err != nil {
+            log.Error().Err(err).Msg("failed to scan track")
+            return nil, fmt.Errorf("error scanning track: %w", err)
+        }
+        tracks = append(tracks, track)
+    }
+    if err := rows.Err(); err != nil {
+        log.Error().Err(err).Msg("error iterating over tracks")
+        return nil, fmt.Errorf("error iterating over tracks: %w", err)
+    }
+    return tracks, nil
 }
 
 func (r *TrackRepository) GetTrackByID(ctx context.Context, id int) (models.Track, error) {

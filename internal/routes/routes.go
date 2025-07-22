@@ -97,6 +97,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			artists.POST("", artistHandler.Create)
 			artists.PUT("/:id", artistHandler.Update)
 			artists.DELETE("/:id", artistHandler.Delete)
+			artists.GET("/search", artistHandler.SearchByName)
 		}
 
 		albums := protected.Group("/albums")
@@ -149,6 +150,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 		{
 			invoices.GET("", invoiceHandler.GetAll)
 			invoices.GET("/:id", invoiceHandler.GetOne)
+			invoices.GET("/:id/lines", invoiceHandler.GetInvoiceLines)
 		}
 
 	}

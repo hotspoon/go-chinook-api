@@ -5,6 +5,8 @@ import (
 	"chinook-api/internal/utils"
 	"net/http"
 
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,10 +19,22 @@ type TrackHandler struct {
 // @Tags tracks
 // @Produce json
 // @Security BearerAuth
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
 // @Success 200 {array} models.Track
 // @Router /api/v1/tracks [get]
 func (h *TrackHandler) GetAll(c *gin.Context) {
-	tracks, err := h.Repo.GetAllTracks(c.Request.Context())
+	limitStr := c.DefaultQuery("limit", "50")
+	offsetStr := c.DefaultQuery("offset", "0")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 50
+	}
+	offset, err := strconv.Atoi(offsetStr)
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+	tracks, err := h.Repo.GetTracksPaginated(c.Request.Context(), limit, offset)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -92,3 +92,24 @@ func (r *ArtistRepository) DeleteArtist(ctx context.Context, id int) error {
     log.Info().Int("id", id).Msg("Artist deleted")
     return nil
 }
+
+// SearchArtistsByName returns artists whose names match the search term (case-insensitive, partial match)
+func (r *ArtistRepository) SearchArtistsByName(ctx context.Context, name string) ([]models.Artist, error) {
+    rows, err := r.DB.QueryContext(ctx, "SELECT ArtistId, Name FROM Artist WHERE Name LIKE ?", "%"+name+"%")
+    if err != nil {
+        log.Error().Err(err).Str("name", name).Msg("Error searching artists by name")
+        return nil, fmt.Errorf("error searching artists: %w", err)
+    }
+    defer rows.Close()
+
+    var artists []models.Artist
+    for rows.Next() {
+        var artist models.Artist
+        if err := rows.Scan(&artist.ID, &artist.Name); err != nil {
+            log.Error().Err(err).Msg("Error scanning artist row")
+            return nil, fmt.Errorf("error scanning artist row: %w", err)
+        }
+        artists = append(artists, artist)
+    }
+    return artists, nil
+}

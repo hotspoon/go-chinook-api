@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -45,12 +46,14 @@ func main() {
 	r.Use(logging.RequestContextMiddleware())
 	// r.Use(cors.Default())
 
+	origins := strings.Split(os.Getenv("FRONTEND_WEB_URL"), ",")
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{os.Getenv("FRONTEND_WEB_URL")},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
+
 	r.Use(logging.ZerologMiddleware(), gin.Recovery())
 	routes.SetupRoutes(r, db)
 

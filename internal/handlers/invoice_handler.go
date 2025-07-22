@@ -47,3 +47,22 @@ func (h *InvoiceHandler) GetOne(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, invoice)
 }
+
+// @Summary Get invoice lines by invoice ID
+// @Description Returns all invoice lines for a given invoice
+// @Tags invoices
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Invoice ID"
+// @Success 200 {array} models.InvoiceLine
+// @Failure 404 {object} models.ErrorResponse
+// @Router /api/v1/invoices/{id}/lines [get]
+func (h *InvoiceHandler) GetInvoiceLines(c *gin.Context) {
+    id := utils.ParseInt(c.Param("id"))
+    lines, err := h.Repo.GetInvoiceLinesByInvoiceID(c.Request.Context(), id)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, lines)
+}
