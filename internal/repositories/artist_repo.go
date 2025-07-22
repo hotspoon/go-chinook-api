@@ -14,6 +14,34 @@ type ArtistRepository struct {
     DB *sql.DB
 }
 
+// GetArtistsPaginated returns a paginated list of artists and the total count
+func (r *ArtistRepository) GetArtistsPaginated(ctx context.Context, limit, offset int) ([]models.Artist, int, error) {
+    var total int
+    err := r.DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM Artist").Scan(&total)
+    if err != nil {
+        log.Error().Err(err).Msg("Error counting artists")
+        return nil, 0, fmt.Errorf("error counting artists: %w", err)
+    }
+
+    rows, err := r.DB.QueryContext(ctx, "SELECT ArtistId, Name FROM Artist LIMIT ? OFFSET ?", limit, offset)
+    if err != nil {
+        log.Error().Err(err).Msg("Error fetching paginated artists")
+        return nil, 0, fmt.Errorf("error fetching artists: %w", err)
+    }
+    defer rows.Close()
+
+    var artists []models.Artist
+    for rows.Next() {
+        var artist models.Artist
+        if err := rows.Scan(&artist.ID, &artist.Name); err != nil {
+            log.Error().Err(err).Msg("Error scanning artist row")
+            return nil, 0, fmt.Errorf("error scanning artist row: %w", err)
+        }
+        artists = append(artists, artist)
+    }
+    return artists, total, nil
+}
+
 func (r *ArtistRepository) GetAllArtists(ctx context.Context) ([]models.Artist, error) {
     rows, err := r.DB.QueryContext(ctx, "SELECT ArtistId, Name FROM Artist")
     if err != nil {

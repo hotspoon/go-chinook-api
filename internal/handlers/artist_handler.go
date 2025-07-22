@@ -7,11 +7,82 @@ import (
 	"chinook-api/internal/repositories"
 	"chinook-api/internal/utils"
 
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
 type ArtistHandler struct {
 	Repo *repositories.ArtistRepository
+}
+
+// @Summary Get all artists (paginated)
+// @Description Returns a paginated list of artists
+// @Tags artists
+// @Produce json
+// @Security BearerAuth
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
+// @Param name query string false "Name to search for"
+// @Success 200 {object} models.PaginatedArtistsResponse
+// @Router /api/v1/artists [get]
+func (h *ArtistHandler) GetAll(c *gin.Context) {
+    name := c.Query("name")
+    limitStr := c.DefaultQuery("limit", "50")
+    offsetStr := c.DefaultQuery("offset", "0")
+    limit, err := strconv.Atoi(limitStr)
+    if err != nil || limit <= 0 {
+        limit = 50
+    }
+    offset, err := strconv.Atoi(offsetStr)
+    if err != nil || offset < 0 {
+        offset = 0
+    }
+
+    if name != "" {
+        // If name query param is present, use search
+        artists, err := h.Repo.SearchArtistsByName(c.Request.Context(), name)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusInternalServerError, models.ErrorResponse{Error: err.Error()})
+            return
+        }
+        total := len(artists)
+        paged := artists
+        hasMore := false
+        // Optionally, apply pagination to search results
+        if offset < total {
+            end := offset + limit
+            if end > total {
+                end = total
+            }
+            paged = artists[offset:end]
+            hasMore = end < total
+        } else {
+            paged = []models.Artist{}
+        }
+        c.JSON(http.StatusOK, gin.H{
+            "data":    paged,
+            "total":   total,
+            "limit":   limit,
+            "offset":  offset,
+            "hasMore": hasMore,
+        })
+        return
+    }
+
+    artists, total, err := h.Repo.GetArtistsPaginated(c.Request.Context(), limit, offset)
+    if err != nil {
+        c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "data":    artists,
+        "total":   total,
+        "limit":   limit,
+        "offset":  offset,
+        "hasMore": offset+limit < total,
+    })
 }
 
 // @Summary Get all artists
@@ -20,15 +91,14 @@ type ArtistHandler struct {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {array} models.Artist
-// @Router /api/v1/artists [get]
-func (h *ArtistHandler) GetAll(c *gin.Context) {
-	artists, err := h.Repo.GetAllArtists(c.Request.Context())
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, artists)
-}
+// func (h *ArtistHandler) GetAll(c *gin.Context) {
+// 	artists, err := h.Repo.GetAllArtists(c.Request.Context())
+// 	if err != nil {
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, artists)
+// }
 
 // @Summary Get artist by ID
 // @Description Returns a single artist by ID
@@ -138,19 +208,19 @@ func (h *ArtistHandler) Delete(c *gin.Context) {
 // @Failure 400 {object} models.ErrorResponse
 // @Router /api/v1/artists/search [get]
 func (h *ArtistHandler) SearchByName(c *gin.Context) {
-    name := c.Query("name")
-    if name == "" {
-        c.AbortWithStatusJSON(http.StatusBadRequest, models.ErrorResponse{Error: "name query parameter is required"})
-        return
-    }
-    artists, err := h.Repo.SearchArtistsByName(c.Request.Context(), name)
-    if err != nil {
-        c.AbortWithStatusJSON(http.StatusInternalServerError, models.ErrorResponse{Error: err.Error()})
-        return
-    }
-    if len(artists) == 0 {
-        c.AbortWithStatusJSON(http.StatusNotFound, models.ErrorResponse{Error: "no artists found"})
-        return
-    }
-    c.JSON(http.StatusOK, artists)
+	name := c.Query("name")
+	if name == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, models.ErrorResponse{Error: "name query parameter is required"})
+		return
+	}
+	artists, err := h.Repo.SearchArtistsByName(c.Request.Context(), name)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+	if len(artists) == 0 {
+		c.AbortWithStatusJSON(http.StatusNotFound, models.ErrorResponse{Error: "no artists found"})
+		return
+	}
+	c.JSON(http.StatusOK, artists)
 }

@@ -151,6 +151,21 @@ definitions:
       name:
         type: string
     type: object
+  models.PaginatedArtistsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Artist'
+        type: array
+      hasMore:
+        type: boolean
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
   models.Playlist:
     properties:
       name:
@@ -258,19 +273,30 @@ paths:
       - albums
   /api/v1/artists:
     get:
-      description: Returns a list of all artists
+      description: Returns a paginated list of artists
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Name to search for
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Artist'
-            type: array
+            $ref: '#/definitions/models.PaginatedArtistsResponse'
       security:
       - BearerAuth: []
-      summary: Get all artists
+      summary: Get all artists (paginated)
       tags:
       - artists
     post:

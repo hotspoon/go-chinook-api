@@ -85,22 +85,39 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns a list of all artists",
+                "description": "Returns a paginated list of artists",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "artists"
                 ],
-                "summary": "Get all artists",
+                "summary": "Get all artists (paginated)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name to search for",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Artist"
-                            }
+                            "$ref": "#/definitions/models.PaginatedArtistsResponse"
                         }
                     }
                 }
@@ -1401,6 +1418,29 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "models.PaginatedArtistsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Artist"
+                    }
+                },
+                "hasMore": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
